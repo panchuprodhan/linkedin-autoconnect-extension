@@ -12,10 +12,9 @@ const darkChakraTheme = extendTheme({
 });
 
 function App() {
-  const [title, setTitle] = React.useState<number>();
-  const [buttonText, setButtonText] = React.useState('Start COnnecting!!');
+  const [count, setCount] = React.useState<number>(0);
+  const [buttonText, setButtonText] = React.useState('START CONNECTING');
   const [disableButton, setDisableButton] = React.useState(false);
-  const [headlines, setHeadlines] = React.useState<string[]>([]);
 
   console.log("weeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee rockkkkkkkkkkkkkkkkk")
 
@@ -24,59 +23,34 @@ function App() {
      * We can't use "chrome.runtime.sendMessage" for sending messages from React.
      * For sending messages from React we need to specify which tab to send it to.
      */
-    chrome.tabs && chrome.tabs.query({
-      active: true,
-      currentWindow: true
-    }, tabs => {
-      /**
-       * Sends a single message to the content script(s) in the specified tab,
-       * with an optional callback to run when a response is sent back.
-       *
-       * The runtime.onMessage event is fired in each content script running
-       * in the specified tab for the current extension.
-       */
-      // chrome.tabs.sendMessage(
-      //   tabs[0].id || 0,
-      //   { type: 'GET_DOM' } as DOMMessage,
-      //   (response: DOMMessageResponse) => {
-      //     setTitle(response.title);
-      //     setHeadlines(response.headlines);
-      //   });
-
-    });
-    chrome.runtime.onConnect.addListener((port) => {
-      console.log(port, 'this port');
-    })
+    chrome.storage.sync.get(['reqCount']).then(res=> {console.log(res)});
     
   });
   let reqCount: any = document.getElementById('context');
 
-  let count = 0;
   function buttonClk() {
-    setButtonText('Connecting');
+    setButtonText('CONNECTING');
     setDisableButton(true);
-    count= 2;
     chrome.tabs.query({active: true, currentWindow: true}, tabs => {
       console.log('tabs', tabs)
       chrome.tabs.sendMessage(
         tabs[0].id || 0,
         {status: 'START'}
       ).then(console.log);
-      // chrome.tabs.connect(
-      //   tabs[0].id || 0,
-      //   {name: 'reqCount'}
-      // );
+      chrome.tabs.connect(
+        tabs[0].id || 0
+      );
 
     });
-    chrome.storage.sync.get(['reqCount']).then(res=> {console.log(res)});
     // countIncrement();
   }
   
   function countIncrement() {
     while (count < 10) {
+      let num = count;
+      setCount(num++);
       setTimeout(() => {
-        count++;
-        setTitle(count);
+        setCount(num);
       }, 5000);
       if(count === 10){
         break;
@@ -104,8 +78,8 @@ function App() {
             </CircularProgress>
           </Box>
           <Box>
-            <Button colorScheme={'green'} onClick={buttonClk} isFullWidth>
-              START CONNECTING
+            <Button colorScheme={'green'} onClick={buttonClk} isFullWidth disabled={disableButton}>
+              {buttonText}
             </Button>
           </Box>
         </VStack>
@@ -113,33 +87,6 @@ function App() {
 
     </ChakraProvider>
 
-      // {/* <ul className="SEOForm">
-      //   <li className="SEOValidation">
-      //     <div className="SEOValidationField">
-      //       <span className="SEOValidationFieldTitle">Title</span>
-      //       <span className={`SEOValidationFieldStatus`}>
-      //         {title} Characters
-      //       </span>
-      //     </div>
-      //     <div className="SEOVAlidationFieldValue">
-      //       {title}
-      //     </div>
-      //   </li>
-
-      //   <li className="SEOValidation">
-      //     <div className="SEOValidationField">
-      //       <span className="SEOValidationFieldTitle">Main Heading</span>
-      //       <span className={`SEOValidationFieldStatus ${headlines.length !== 1 ? 'Error' : 'Ok'}`}>
-      //         {headlines.length}
-      //       </span>
-      //     </div>
-      //     <div className="SEOVAlidationFieldValue">
-      //       <ul>
-      //         {headlines.map((headline, index) => (<li key={index}>{headline}</li>))}
-      //       </ul>
-      //     </div>
-      //   </li>
-      // </ul> */}
 
       // <button onClick={buttonClk} disabled={disableButton}>{buttonText}</button>
       // <span id='context'>{title}</span>

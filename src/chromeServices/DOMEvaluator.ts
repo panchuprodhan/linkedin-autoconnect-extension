@@ -73,7 +73,7 @@ const sendConnectionRequest = async() => {
             requestCount(j + 1);
             j++;
             
-            await sleep(2000);
+            // await sleep(2000);
         }
     }
     await chrome.runtime.sendMessage({ status: 'STOP' });
@@ -89,4 +89,7 @@ function sleep(ms: number | undefined) {
 function requestCount(counter: number) {
     console.log(counter, "all counting done here");
     chrome.storage.sync.set({ reqCount: counter + 1 });
+    chrome.runtime.onConnect.addListener((port: chrome.runtime.Port)=> {
+        console.log('MAydayyyyy')
+    })
 }
