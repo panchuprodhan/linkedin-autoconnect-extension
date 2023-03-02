@@ -1,8 +1,6 @@
 import { Box, Container, Flex, Heading, Text, VStack } from '@chakra-ui/layout';
 import { Button, ChakraProvider, CircularProgress, CircularProgressLabel, extendTheme } from '@chakra-ui/react';
 import React from 'react';
-import './App.css';
-import { DOMMessage, DOMMessageResponse } from './types';
 
 const darkChakraTheme = extendTheme({
   config: {
@@ -13,6 +11,7 @@ const darkChakraTheme = extendTheme({
 
 function App() {
   const [count, setCount] = React.useState<number>(0);
+  const [totalCount, setTotalCount] = React.useState<number>();
   const [buttonText, setButtonText] = React.useState('START CONNECTING');
   const [disableButton, setDisableButton] = React.useState(false);
 
@@ -23,10 +22,12 @@ function App() {
      * We can't use "chrome.runtime.sendMessage" for sending messages from React.
      * For sending messages from React we need to specify which tab to send it to.
      */
-    chrome.storage.sync.get(['reqCount']).then(res=> {console.log(res)});
+    chrome.storage.sync.get(['totalCount']).then(res=> {
+      console.log("Value is "+res.reqCount);
+      setTotalCount(res.totalCount);
+    });
     
   });
-  let reqCount: any = document.getElementById('context');
 
   function buttonClk() {
     setButtonText('CONNECTING');
@@ -37,28 +38,18 @@ function App() {
         tabs[0].id || 0,
         {status: 'START'}
       ).then(console.log);
-      chrome.tabs.connect(
-        tabs[0].id || 0
-      );
-
+      
     });
-    // countIncrement();
   }
-  
-  function countIncrement() {
-    while (count < 10) {
-      let num = count;
-      setCount(num++);
-      setTimeout(() => {
-        setCount(num);
-      }, 5000);
-      if(count === 10){
-        break;
-      }
+  chrome.runtime.onMessage.addListener(({request}, sender, sendResponse) => {
+    setCount(request.count)
+  })
+  chrome.runtime.onMessage.addListener(({status}, sender, sendResponse) => {
+    if(status === 'STOP') {
+      setButtonText('ALL CONNECTED')
     }
-
-  }
-  
+  })
+    
 
   return (
     <ChakraProvider theme={darkChakraTheme}>
@@ -73,7 +64,7 @@ function App() {
             <Text fontSize='18px'>Invitaions Sent</Text>
           </Box>
           <Box>
-            <CircularProgress value={(count / 10)} color="green.400" size='100px'>
+            <CircularProgress value={(count / Number(totalCount)) * 100} color="green.400" size='100px'>
               <CircularProgressLabel>{count}</CircularProgressLabel>
             </CircularProgress>
           </Box>
